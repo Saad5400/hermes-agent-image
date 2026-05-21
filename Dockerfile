@@ -22,6 +22,8 @@ RUN set -eux; \
 # survives container restarts and image upgrades.
 ENV GH_CONFIG_DIR=/opt/data/gh-config
 
-# Hand back to the upstream entrypoint, which switches to the hermes user
-# and applies HERMES_UID/HERMES_GID remapping.
-USER root
+# Wrapper entrypoint creates /opt/data/gh-config with hermes ownership
+# before handing off to the upstream entrypoint (which drops privileges).
+COPY entrypoint-wrapper.sh /usr/local/bin/entrypoint-wrapper.sh
+RUN chmod +x /usr/local/bin/entrypoint-wrapper.sh
+ENTRYPOINT ["/usr/local/bin/entrypoint-wrapper.sh"]
