@@ -16,7 +16,8 @@ RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends gh; \
     rm -rf /var/lib/apt/lists/*; \
-    gh --version
+    gh --version; \
+    ln -sf /opt/hermes/.venv/bin/hermes /usr/local/bin/hermes
 
 # gh credentials persist on the Hermes data volume so `gh auth login`
 # survives container restarts and image upgrades.
