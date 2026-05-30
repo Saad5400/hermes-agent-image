@@ -19,6 +19,15 @@ RUN set -eux; \
     gh --version; \
     ln -sf /opt/hermes/.venv/bin/hermes /usr/local/bin/hermes
 
+# Pre-install the WhatsApp (Baileys) bridge npm deps at BUILD time. The gateway
+# checks for scripts/whatsapp-bridge/node_modules at startup and only runs
+# `npm install` if it's missing (whatsapp.py). Baking it into the image (which
+# is where the bridge lives — NOT the /opt/data volume) makes every container
+# start skip that slow install step.
+RUN cd /opt/hermes/scripts/whatsapp-bridge \
+    && (npm ci --silent || npm install --silent) \
+    && test -d node_modules
+
 # gh credentials persist on the Hermes data volume so `gh auth login`
 # survives container restarts and image upgrades. The hermes user creates
 # this dir itself on first `gh auth login`, so it owns it (no root chown).
