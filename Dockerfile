@@ -20,11 +20,11 @@ RUN set -eux; \
     ln -sf /opt/hermes/.venv/bin/hermes /usr/local/bin/hermes
 
 # gh credentials persist on the Hermes data volume so `gh auth login`
-# survives container restarts and image upgrades.
+# survives container restarts and image upgrades. The hermes user creates
+# this dir itself on first `gh auth login`, so it owns it (no root chown).
 ENV GH_CONFIG_DIR=/opt/data/gh-config
 
-# Wrapper entrypoint creates /opt/data/gh-config with hermes ownership
-# before handing off to the upstream entrypoint (which drops privileges).
-COPY entrypoint-wrapper.sh /usr/local/bin/entrypoint-wrapper.sh
-RUN chmod +x /usr/local/bin/entrypoint-wrapper.sh
-ENTRYPOINT ["/usr/local/bin/entrypoint-wrapper.sh"]
+# IMPORTANT: do NOT override ENTRYPOINT. The upstream image uses s6-overlay;
+# its real entrypoint is /init, which bootstraps s6 AND execs the CMD.
+# Overriding it (with docker/entrypoint.sh) breaks startup and the container
+# crash-loops with "s6-setuidgid: not found". We only add packages here.
